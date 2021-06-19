@@ -1,0 +1,425 @@
+---
+title: "Workshop 1/1: Introduction to R and Rstudio"
+subtitle: "Functional analyses in transcriptomics"
+author: "January Weiner"
+date: "`r Sys.Date()`"
+output: 
+    html_document:
+      toc: true
+      toc_float: true
+outputdupa:
+  xaringan::moon_reader:
+    self-contained: true
+    css: ["default", "files/cubi-fonts.css", "files/style.css" ]
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      countIncrementalSlides: false
+      ratio: "16:9"
+      beforeInit: "files/macros.js"
+toc: no
+---
+
+```{r,echo=FALSE}
+## Set default options for the knitr RMD processing
+knitr::opts_chunk$set(echo=FALSE,warning=FALSE,message=FALSE,fig.width=5,fig.height=5,cache=FALSE,autodep=TRUE, results="hide")
+library(pander)
+library(knitr)
+library(kableExtra)
+```
+
+```{r echo=FALSE,include=FALSE,eval=TRUE}
+options(crayon.enabled = TRUE)
+options(crayon.colors = 256)
+knitr::knit_hooks$set(output = function(x, options){
+  paste0(
+    '<pre class="r-output"><code>',
+    fansi::sgr_to_html(x = htmltools::htmlEscape(x), warn = FALSE),
+    '</code></pre>'
+  )
+})
+
+## this is an ugly, ugly hack, but otherwise crayon does not LISTEN TO REASON!!!
+num_colors <- function(forget=TRUE) 256
+library(crayon)
+assignInNamespace("num_colors", num_colors, pos="package:crayon")
+```
+
+
+```{r libraries,cache=FALSE}
+library(tidyverse)
+```
+
+# First steps in R/Rstudio
+
+## Workspaces
+
+ Workspace is basically a folder which contains a few special files in
+ which R stores project-specific data.
+
+  * `Rhistory` (hidden file) – a text file containing all commands that you
+    have issued
+  * `Rdata` (hidden file) – a binary file containing your workspace (all
+    objects created)
+  * `<filename>.Rproj` – Rstudio R project file containing some
+    rstudio-specific settings (text file)
+  * Anything else should be saved by you
+
+
+**Exercise.**
+
+  * Start R studio $\rightarrow$ File $\rightarrow$ New project
+    $\rightarrow$ New directory $\rightarrow$ New project and create a new
+    project.
+  * Examine the Files pane (lower right); what does it indicate?
+  * Try to open the ".Rproj" file in a text editor. 
+  * Go to File $\rightarrow$ New File $\rightarrow$ $\rightarrow$ R Script
+    to create a new R script.
+  * In the new file, write a simple R statement, for example:
+
+```
+a <- 1:10
+```
+
+   * Press Ctrl/Cmd-Enter. 
+   * What happens? What do you see in the console? 
+   * What do you see under "Environment" on the top right?
+
+## Using R as a git[hub] interface
+
+If you want to download all lecture materials and update it easily when new
+lectures come in, do the following:
+
+  * Start R studio $\rightarrow$ File $\rightarrow$ New project
+    $\rightarrow$ Version Control $\rightarrow$ Git 
+  * Enter `https://github.com/january3/ReproducibleR2021` as the
+    "Repository URL"
+  * Pay attention to the "Create project as subdirectory of" entry field,
+    so that you know where you are saving the project.
+  * Click "Create Project". Rstudio will download all available materials.
+  * When you want to update / check for updates, go to the "git" tab in the
+    top right panel and press the blueish "down" arrow.
+
+ 
+
+## Workspaces
+
+ Workspace is basically a folder which contains a few special files in
+ which R stores project-specific data.
+
+  * `Rhistory` (hidden file) – a text file containing all commands that you
+    have issued
+  * `Rdata` (hidden file) – a binary file containing your workspace (all
+    variables created)
+  * `<filename>.Rproj` – Rstudio R project file containing some
+    rstudio-specific settings (text file)
+  * Anything else should be save by you
+
+
+---
+
+# R language basics
+
+## R language basics
+
+ * Assignment and variables (`a <- 2`)
+ * vectors and multiple assignment (`a <- c(1, 7, 9)`)
+ * operators (`3 + 5` or `a + 7`)
+ * functions (`sum(c(1, 2, 3))`)
+
+## Basic R data types
+
+ * character values ("strings") – use double or single quotes
+ * integer
+ * numeric (doubles)
+ * logical (TRUE / FALSE)
+ * factor (with levels) – important for statistics
+ * complex numbers
+ * functions
+
+**Exercise.**
+
+ * create variables: a string, a number, a factor
+   * how to create the variables?
+   * how to view the variables?
+ * what does `1:5` return?
+ * what does `c(1, 2, 3, 4, 5)` return?
+
+
+## R data structures
+
+### vectors (character, integer, numeric, logical, factor)
+
+ * constructing: with `c` (combine values): `c(1, 2, 5)`
+ * accessing elements: `myvector[1]`, `myvector[c(1, 2, 5)]`
+ * can be named with `names(myvector) <- c("A", "B", "C")`
+ * there is no such thing as a scalar (single value), only a vector of
+   length 1
+
+### Matrices and arrays
+
+ * matrix (character, integer, numeric, logical, factor)
+
+ * constructing with `matrix()`, e.g.
+
+     matrix(rnorm(100), ncol=10, byrow=TRUE)
+
+ * accessing elements with `mtx[ row, column ]`
+ * accessing by row and column: `mtx[ row, ]`, `mtx[ , column ]`
+   $\rightarrow$ returns a vector (!)
+
+### Lists
+
+ Lists: can hold multiple types, can be named
+
+ * Constructing: with `list()`, eg.
+
+    list(a=1, b="test")
+
+ * elements may have different class ("data type")
+ * accessing elements:
+
+    * by number, e.g. `mylist[[1]]`
+
+    * by name (if defined), e.g. `mylist[["element name"]]`
+
+    * using the `$` shortcut: `mylist$some_name`
+
+
+### Data frames 
+
+data frames (and such like): special type of lists
+
+ * Constructing with `data.frame`, e.g.
+
+     data.frame(ID=c("A", "B"), value=c(1, 2))
+
+ * columns are elements of a list and can be accessed exactly like elements of a
+   list (using `[[`, `$`)
+ * in addition, matrix-style `[` operator (row/columns) is defined, but: warning! it
+   works slightly differently! (ie `df[ row, ]`  does not return a row, but a data
+   frame with one row)
+ * There are many classes that extend the behavior of default data frames
+   (tibble, DFrame, DT, colorDF, ...)
+
+**Exercise.**
+
+ * Use the `matrix` function to create a matrix with 5 rows and 2 columns,
+   filled with random numbers (use `rnorm` to generate random numbers).
+ * convert the matrix to a data frame using the `as.data.frame` function
+ * Add a column with identifiers – first five letters of the alphabet (you
+   can use the predefined vector `LETTERS` for it)
+ * convert the data frame back to the matrix with `data.matrix`. 
+ * What is the value type of the new matrix? (use `class` for this)
+
+### Functions
+
+Functions are also objects that can be either used in place (like any
+value, say `5` or `"Berlin"`) or assigned to variables. This is important
+for vectorization (lambda calculus).
+
+ * Construction: using the `function` keyword:
+       
+      a <- function(i, j=5) {
+         res <- i + j
+         return(res)
+      }
+ * The variable `a` holds now the function object. You can assign the
+   object (copy it) to another variable. Assignment is always by value,
+   never by reference.
+
+## Vectorization
+
+Vectorization is an enormously important feature of languages such as R or
+matlab. It allows natural and efficient computations.
+
+### Simple vectorization
+
+**Exercise.**
+
+ * what happens when you add a number to a vector? (i.e. `c(3, 1, 4) + 5`)
+ * what happens when you multiply a vector with a number?
+ * what happens when you add two vectors?
+
+**Exercise.**
+
+  Try the following code:
+
+```{r eval=FALSE,echo=TRUE}
+vec1 <- 1:10
+vec2 <- 20:30
+
+vec1 + vec2
+```
+
+This returns a warning. Why? What is the problem?
+
+### Vectorization with mapping functions
+
+In R, instead of running code in a loop, we apply a function to all
+elements of an object (list, vector, columns of a data frame or matrix).
+This is a very important feature of the language. While the same might be
+achieved in other languages (e.g. lambda calculus in Python), in R it is
+very natural and simple. Loops are used very rarely in mature R code.
+
+#### Example: calculating 100 random distributions 
+
+**Task:** Generate 100 vectors, each with 10 random numbers. For each
+vector, calculate the mean and SD. Keep the vectors.
+
+**Example using loops:**
+
+```{r, echo=TRUE,eval=FALSE}
+samples <- list()
+means   <- c()
+sds     <- c()
+for(i in 1:100) {
+  samples[i] <- rnorm(10, mean=1, sd=2)
+  means[i]   <- mean(samples[i])
+  sds[i]     <- sd(samples[i])
+}
+```
+
+**The R way:**
+
+```{r, echo=TRUE,eval=FALSE}
+samples <- replicate(100, rnorm(10, mean=1, sd=2))
+means   <- sapply(samples, mean)
+sds     <- sapply(samples, sd)
+```
+
+(note: `lapply` returns always a list, `sapply` returns whatever the hell
+it thinks it should. Better functions in `tidyverse`)
+
+**Exercise:** basic use of sapply and lapply
+
+ 1. Use `sample` to generate a vector of length 150 containing random
+    numbers from 20 to 500.
+ 2. Apply the `lapply` function to the vector from (1.) to generate 50
+    vectors, each of a random length from 20 to 500.
+ 3. Apply the `sapply` function to the result of (2.) to calculate the
+    means and SD's of the 150 vectors.
+ 4. Use `plot(x, y)` function to plot the means vs vector length (x should
+    be the vector from (1.), and y should be the result from (3))
+
+## Installing packages
+
+There are three main sources of R packages in bioinformatics: CRAN,
+Bioconductor and github.
+
+### Installing packages from CRAN
+
+Install the packages "tmod", "ggplot2" and "BiocManager" using following
+commands:
+
+```{r eval=FALSE}
+install.packages("tmod")
+install.packages("ggplot2")
+install.packages("BiocManager")
+```
+
+### Installing packages from Bioconductor
+
+```{r eval=FALSE}
+BiocManager::install("DESeq2")
+```
+
+### Installing packages from github
+
+```{r eval=FALSE}
+install.packages("devtools")
+devtools::install_github("january3/colorDF")
+```
+
+
+---
+
+# (R)markdown
+
+## Using (R) markdown with Rstudio
+
+### Opening an Rmarkdown file
+
+First, we will take a look at Rmarkdown.
+
+ 1. Go to `File` $\rightarrow$ `New File` $\rightarrow$ `R Markdown`.
+    Select `Document`, fill out the "title", use HTML.
+ 2. Take a closer look at the file. Where does the title you entered
+    appear?  
+ 3. Save file to your project directory (`Ctrl-S`).
+ 4. Knit your markdown: press `Ctrl-Shift-K` or click on the ball of yarn.
+ 5. Compare the output to the document.
+
+### Working with markdown – basic formatting
+
+ 1. Try out the following: creating **bold** (`**bold**`), *italics*
+    (`*italics*`)
+ 2. Make a footnote:
+
+            Text with a footnote^[This is the footnote.].
+
+ 3. Download an image to your working directory. Insert it into the
+    rmarkdown document:
+
+          ![Image caption](image_file_name.jpg)
+
+ 4. Create a bullet point and numbered list. What happens if you use
+     different numbers or change the order of the numbers?
+
+```
+ * one
+ * two 
+ * three
+
+ 1. one
+ 2. two
+ 3. three
+```
+
+ 4. Create a simple table, like this:
+
+```
+  Right     Left     Center     Default
+-------     ------ ----------   -------
+     12     12        12            12
+    123     123       123          123
+      1     1          1             1
+```
+
+### Working with chunks
+
+There are fragments of R code in the document which get compiled to
+markdown. These are called *chunks*.
+
+ 1. What happens when your remove the `{r...}` fragment from the chunk
+    starting marking?
+ 2. Click on the green triangle (<span style="color:green;">▶</span>). What
+    happens?
+ 3. Click on the cogwheel (⚙) symbol. What options do you see? Try them.
+
+
+
+## Exercise: Example Rmarkdown analysis
+
+There is a lake in a garden. Every day, the water lilies cover twice as
+much area as the previous day. On the first day, the water lilies cover
+1/100th of the area of the lake.
+
+ * What is the formula to calculate the area covered by the water lilies on
+   day n? (pen and paper, not in Rstudio!)
+ * Open a new Rmarkdown document and create your analysis as follows.
+ * assign days 1 ... 10 to variable x. Now assign the fraction of the area
+   covered by water lilies on day n to variable y
+ * plot x vs y (use the simple `plot(x, y)` function)
+ * When will the half of the area be covered by water lilies? Use `abline(h=.5)`
+   (what does it do?) to show a graphical solution
+ * What is the fraction on day 3? Hint: what does `y[3]` do?
+ * Speaking of which, what dows `y[4:5]` do? (just try it!)
+ * Make the plot yourself.
+ * use 'col' parameter of `plot` and a color name (e.g. "red") to change
+   the color of the line (`plot(..., col="red")`)
+ * what if each day the lilies cover a fraction of area that is 1.5 the
+   fraction of area on the previous day?
+ * Use `lines(x, y)` function to put a second line on the plot
+
+
