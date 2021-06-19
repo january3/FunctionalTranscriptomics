@@ -249,6 +249,7 @@ div.tocify {
 </div>
 
 
+<pre class="r"><code>library(tidyverse)</code></pre>
 <div id="first-steps-in-rrstudio" class="section level1">
 <h1>First steps in R/Rstudio</h1>
 <div id="workspaces" class="section level2">
@@ -451,12 +452,18 @@ sds     &lt;- sapply(samples, sd)</code></pre>
 <div id="installing-packages-from-cran" class="section level3">
 <h3>Installing packages from CRAN</h3>
 <p>Install the packages “tmod”, “ggplot2” and “BiocManager” using following commands:</p>
+<pre class="r"><code>install.packages(&quot;tmod&quot;)
+install.packages(&quot;ggplot2&quot;)
+install.packages(&quot;BiocManager&quot;)</code></pre>
 </div>
 <div id="installing-packages-from-bioconductor" class="section level3">
 <h3>Installing packages from Bioconductor</h3>
+<pre class="r"><code>BiocManager::install(&quot;DESeq2&quot;)</code></pre>
 </div>
 <div id="installing-packages-from-github" class="section level3">
 <h3>Installing packages from github</h3>
+<pre class="r"><code>install.packages(&quot;devtools&quot;)
+devtools::install_github(&quot;january3/colorDF&quot;)</code></pre>
 <hr />
 </div>
 </div>
