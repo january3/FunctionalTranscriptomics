@@ -24,3 +24,40 @@ As Weiner et al. mentioned @weiner2018metabolite ...
 ```{r}
 summary(iris)
 ```
+
+
+# Water lilies analysis
+
+There is a lake in a garden. Every day, the water lilies cover twice as much area as the previous day. On the first day, the water lilies cover 1/100th of the area of the lake.
+
+What is the formula to calculate the area covered by the water lilies on day n? (pen and paper, not in Rstudio!)
+
+ $$A_n = A_{n-1} \cdot 2$$
+
+ $$A(n) = \frac{1}{100} \cdot 2^{n-1}$$
+assign days 1 … 10 to variable x. Now assign the fraction of the area covered by water lilies on day n to variable y
+
+```{r}
+days <- 1:10
+area <- 1/100 * 2^(days - 1)
+```
+
+
+plot x vs y (use the simple plot(x, y) function)
+
+
+```{r}
+plot(days, area)
+abline(h=.5)
+```
+
+When will the half of the area be covered by water lilies? Use abline(h=.5) (what does it do?) to show a graphical solution
+What is the fraction on day 3? Hint: what does y[3] do?
+Speaking of which, what dows y[4:5] do? (just try it!)
+Make the plot yourself.
+use ‘col’ parameter of plot and a color name (e.g. “red”) to change the color of the line (plot(..., col="red"))
+what if each day the lilies cover a fraction of area that is 1.5 the fraction of area on the previous day?
+Use lines(x, y) function to put a second line on the plot
+
+
+
