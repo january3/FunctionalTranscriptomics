@@ -464,7 +464,7 @@ R uses a particular representation of linear model equations:
 
 e.g. 
 
- $$y = \beta_0 + \beta_1 \times y$$
+ $$y = \beta_0 + \beta_1 \times x$$
 
 is represented as
 
@@ -472,7 +472,7 @@ is represented as
 
 Whereas 
 
- $$y = \beta_1 \times y$$
+ $$y = \beta_1 \times x$$
 
 (no intercept, i.e. intercept $= 0$)
 
