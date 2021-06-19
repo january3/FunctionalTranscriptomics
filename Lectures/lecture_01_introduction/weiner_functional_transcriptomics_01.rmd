@@ -383,6 +383,7 @@ corrected for multiple testing? Etc., etc., etc.
  * statistics
  * data visualizations
  * interactive data exploration
+ * low overhead for quick tasks
  * you can use Python from R
 
 ]
@@ -397,6 +398,8 @@ corrected for multiple testing? Etc., etc., etc.
 
  * Workshop session 1: setting up our working environment
    
+    * Lecture: Introduction
+
     * Introduction to R / Rstudio
 
     * Introduction to (R)markdown
@@ -409,7 +412,7 @@ corrected for multiple testing? Etc., etc., etc.
 
     * Running a basic data analysis in transcriptomics
 
-    * Introduction to the problems of functional analysis
+    * Lecture: Introduction to the problems of functional analysis
 
 ---
 
@@ -435,17 +438,28 @@ corrected for multiple testing? Etc., etc., etc.
 
  * Lecture: Gene set enrichment algorithms – an overview
 
+---
+
+## Rstudio introduction
+
+ * Open Rstudio
+ * Open the workshop 1/1 HTML file
+ * We go through it together
+
 
 ---
 
-## The R language
 
 .pull-left[
 
+#### The R language
+
  * Interpreted language
  * Functional language: everything is a function
+ * Vectorization
  * Pass by value 
  * Lazy evaluation
+ * Object oriented
  * Four main types of objects:
     * Vectors
     * Matrices / Arrays
@@ -458,16 +472,90 @@ corrected for multiple testing? Etc., etc., etc.
 
 .pull-right[
 
-**Functional language features:**
+#### Functional language features:
 
  * Minimization of side effects
  * Closures (anonymous functions, like lambda in Python)
- * Apply / map instead of loops
+ * Vectorization: 
+   * operating on vectors rather than scalars
+   * Apply / map instead of loops
 
 ]
 
 ---
 
-## Introduction to R/Rstudio
+## Introduction to R
+
+ * Return to the workshop 1/1 file.
+ * Proceed until the end of the "R language basis" section.
+
+
+---
+
+## Literate programming
+
+
+.pull-left[
+
+*I believe that the time is ripe for significantly better documentation
+of programs, and that we can best achieve this by considering
+programs to be works of literature. Hence, my title: “Literate
+Programming.”*
+
+*Let us change our traditional attitude to the construction of
+programs: Instead of imagining that our main task is to instruct a
+computer what to do, let us concentrate rather on explaining to
+human beings what we want a computer to do.*
+
+(Donald E. Knuth)
+]
+
+.pull-right[
+![Donald E. Knuth](images/knuth.jpg)
+]
+
+---
+
+## Coding for others (including yourself)
+
+ * the "future you" will need to understand your analysis. You think you will
+   remember, but you won't.
+
+--
+
+ * Principles of reproducibility require that your analysis is readable by
+   other humans, not only by machines
+
+--
+
+ * Clear, well documented and communicative analysis will be also easier to
+   maintain in future
+
+---
+ 
+## Literate programming
+
+*The practitioner of literate programming can be regarded as an
+essayist, whose main concern is with exposition and excellence of
+style. Such an author, with thesaurus in hand, **chooses the names of
+variables carefully and explains what each variable means**.*
+
+--
+
+*He or she strives for a program that is comprehensible because its concepts
+have been introduced in **an order that is best for human understanding**,
+using a mixture of formal and informal methods that reinforce each other.*
+
+(Donald E. Knuth)
+
+
+---
+
+## Introduction to (R)markdown
+
+ * Proceed with the workshop 1/1 file until the end.
+
+
+
 
 
