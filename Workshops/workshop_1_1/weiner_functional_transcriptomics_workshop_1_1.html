@@ -392,7 +392,10 @@ div.tocify {
 <p>Functions are also objects that can be either used in place (like any value, say <code>5</code> or <code>&quot;Berlin&quot;</code>) or assigned to variables. This is important for vectorization (lambda calculus).</p>
 <ul>
 <li><p>Construction: using the <code>function</code> keyword:</p>
-<p>a &lt;- function(i, j=5) { res &lt;- i + j return(res) }</p></li>
+<pre><code> a &lt;- function(i, j=5) {
+    res &lt;- i + j
+    return(res)
+ }</code></pre></li>
 <li><p>The variable <code>a</code> holds now the function object. You can assign the object (copy it) to another variable. Assignment is always by value, never by reference.</p></li>
 </ul>
 </div>

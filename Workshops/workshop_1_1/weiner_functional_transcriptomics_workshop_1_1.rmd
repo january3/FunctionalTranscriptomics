@@ -220,10 +220,11 @@ for vectorization (lambda calculus).
 
  * Construction: using the `function` keyword:
        
-      a <- function(i, j=5) {
-         res <- i + j
-         return(res)
-      }
+        a <- function(i, j=5) {
+           res <- i + j
+           return(res)
+        }
+      
  * The variable `a` holds now the function object. You can assign the
    object (copy it) to another variable. Assignment is always by value,
    never by reference.
