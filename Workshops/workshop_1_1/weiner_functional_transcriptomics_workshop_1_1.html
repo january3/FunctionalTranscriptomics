@@ -393,7 +393,7 @@ div.tocify {
 <ul>
 <li><p>Construction: using the <code>function</code> keyword:</p>
 <pre><code> a &lt;- function(i, j=5) {
-    res &lt;- i + j
+    res &lt;- i + j 
     return(res)
  }</code></pre></li>
 <li><p>The variable <code>a</code> holds now the function object. You can assign the object (copy it) to another variable. Assignment is always by value, never by reference.</p></li>
@@ -430,9 +430,9 @@ vec1 + vec2</code></pre>
 means   &lt;- c()
 sds     &lt;- c()
 for(i in 1:100) {
-  samples[i] &lt;- rnorm(10, mean=1, sd=2)
-  means[i]   &lt;- mean(samples[i])
-  sds[i]     &lt;- sd(samples[i])
+  samples[[i]] &lt;- rnorm(10, mean=1, sd=2)
+  means[i]   &lt;- mean(samples[[i]])
+  sds[i]     &lt;- sd(samples[[i]])
 }</code></pre>
 <p><strong>The R way:</strong></p>
 <pre class="r"><code>samples &lt;- replicate(100, rnorm(10, mean=1, sd=2))

@@ -221,7 +221,7 @@ for vectorization (lambda calculus).
  * Construction: using the `function` keyword:
        
         a <- function(i, j=5) {
-           res <- i + j
+           res <- i + j 
            return(res)
         }
       
@@ -275,9 +275,9 @@ samples <- list()
 means   <- c()
 sds     <- c()
 for(i in 1:100) {
-  samples[i] <- rnorm(10, mean=1, sd=2)
-  means[i]   <- mean(samples[i])
-  sds[i]     <- sd(samples[i])
+  samples[[i]] <- rnorm(10, mean=1, sd=2)
+  means[i]   <- mean(samples[[i]])
+  sds[i]     <- sd(samples[[i]])
 }
 ```
 
