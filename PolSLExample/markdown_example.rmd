@@ -1,0 +1,26 @@
+---
+title: "Example document"
+author: "Yours truly"
+date: "Right here, right now"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+bibliography: "bilbiography.bib"
+---
+
+*asdf* **strong emphasis** asdfd  sdfd
+
+As Weiner et al. mentioned @weiner2018metabolite ...
+
+
+ $$\sum_{i=1}^n (x_i - x)^2$$
+
+
+|table  | with  | pipes|
+|-------|-------|------|
+|do it  | with  |     R|
+
+```{r}
+summary(iris)
+```
