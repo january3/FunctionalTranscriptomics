@@ -28,7 +28,9 @@ library(pander)
 library(knitr)
 library(kableExtra)
 library(ggthemes)
+library(ggplot2)
 theme_set(theme_tufte())
+options(width=100)
 ```
 
 ```{r echo=FALSE,include=FALSE,eval=TRUE}
@@ -53,6 +55,7 @@ assignInNamespace("num_colors", num_colors, pos="package:crayon")
 
 ## Plan for today
 
+ * Download the required data and software
  * View analysis report from CUBI
  * Repeat the differential expression analysis on the full data set
  * Run a number of enrichment analyses
@@ -65,6 +68,7 @@ Make sure that you have the following libraries installed:
 ```{r}
 library(tidyverse)
 library(ggplot2)
+library(cowplot)
 library(tmod)
 library(colorDF)
 library(DESeq2)
@@ -117,7 +121,7 @@ covar  <- readRDS("../../Datasets/covar.rds")
 annot  <- readRDS("../../Datasets/annot.rds")
 ```
 
-# Part 1: Differential expression analysis
+# 1. Differential expression analysis
 
 ## Inspecting a full report
 
@@ -158,7 +162,7 @@ ds2 <- DESeq(ds2)
 
 The ds2 object has three coefficients:
 
-```{r}
+```{r results="markdown"}
 resultsNames(ds2)
 ```
 
@@ -278,7 +282,7 @@ comparison. Inspect the results.
 
 **Solution.**
 
-```{r}
+```{r class.source="fold-hide"}
 ## we will shorten the code a bit.
 sel <- abs(res_SC2$log2FoldChange) > lfc_thr &
        res_SC2$padj < pval_thr
@@ -292,6 +296,91 @@ So far so good, but how do we know the enrichment is real? Can we check it
 somehow?
 
 ### Inspecting the results
+
+
+#### Overview: tmodPanelPlots
+
+A tmodPanelPlot juxtaposes enrichment analysis results from different
+comparisons. For this, we need a list.
+
+```{r fig.width=10,fig.height=10}
+res <- list(other=ce_res_other, SC2=ce_res_sc2)
+tmodPanelPlot(res, filter.rows.pval = 1e-3)
+```
+
+However, this does not tell us whether genes in a gene set go up or down?
+Unfortunately, we need to decide first what it means that a gene "goes up"
+or "goes down", that is, indicate which genes are DEGs.
+
+```{r fig.width=10,fig.height=10}
+res_merged <- merge(res_other, res_SC2, 
+  by=c("PrimaryID", "ENSEMBL", "SYMBOL") , suffixes=c(".other", ".SC2"))
+lfcs <- res_merged[ , c("log2FoldChange.other", "log2FoldChange.SC2") ]
+pvals <- res_merged[ , c("padj.other", "padj.SC2") ]
+pie <- tmodDecideTests(res_merged$SYMBOL, lfc = lfcs, pval=pvals)
+names(pie) <- names(res)
+tmodPanelPlot(res, filter.rows.pval = 1e-3, pie=pie, grid="b")
+
+```
+
+
+#### Evidence plots (ROC curves)
+
+One way of inspecting the results is to plot the ROC curve associated with
+the given module. Here is an example:
+
+```{r}
+gg <- res_SC2$SYMBOL[ order(res_SC2$pvalue) ]
+evidencePlot(gg, m="LI.M75", gene.labels=TRUE)
+```
+
+**Exercise (10min).** Compare the evidence plots for `res_SC2` and gene
+sets (modules) `LI.M75`, `LI.M127` and `LI.M37.0`.
+
+
+#### Inspecting the individual genes.
+
+So what genes are exactly in the gene set `LI.M75`? Can we display their
+expression somehow?
+
+```{r}
+mm <- getModuleMembers("LI.M75")[[1]]
+print(mm)
+```
+
+We now can retrieve the genes in the `annot` data frame and plot them.
+(for simplicity, we take only first 4)
+
+```{r fig.height=10,fig.width=10}
+sel <- res_SC2[ res_SC2$SYMBOL %in% mm, ][["PrimaryID"]]
+plots <- lapply(sel[1:4], plot_gene, expr=norm_counts, covariate=covar$group)
+plot_grid(plotlist=plots, ncol=2)
+```
+
+#### Calculating eigengenes
+
+Eigengenes are a sort of "standardized" expression for a whole gene set. We
+define them as the first component of the PCA for genes that belong in the
+given gene set. We can plot the eigengenes to show how the whole gene set
+behaves in a context.
+
+```{r}
+eig <- eigengene(norm_counts, annot$SYMBOL)
+df <- data.frame(covar, eigengene=eig[ "LI.M75", ])
+ggplot(df, aes(x=group, y=eigengene)) + 
+  geom_boxplot() +
+  geom_jitter(width=.3)
+```
+
+#### Upset plots
+
+Many genes are present in more than one gene set. Therefore, a lot of the
+results are actually redundant. One way of visualizing this are upset
+plots.
+
+```{r fig.width=10,fig.height=10}
+upset(ce_res_sc2$ID[1:20])
+```
 
 
 ### Using an another source of gene sets
@@ -311,9 +400,183 @@ go_mset <- makeTmodFromDataFrame(go, feature_col = "gene_symbol",
                                  title_col = "gs_name")
 ```
 
+We can now use the `go_mset` object in every tmod function, for example:
+
+```{r results="markdown"}
+gg <- res_SC2$SYMBOL[ order(res_SC2$pvalue) ]
+tmodCERNOtest(gg, mset=go_mset)
+```
+
+Aaand we have a problem: what we see on top are gene sets which contain
+huge numbers of genes – but which are scantly enriched.
+
+```{r}
+evidencePlot(gg, m="M3458", mset=go_mset)
+```
+
+So we either have to filter the results or, better, filter the gene sets.
+First, we calculate the number of genes per gene set, then we select only
+these gene sets that have at most 50 genes and at least 5 genes.
+
+```{r go2,cache=TRUE}
+N <- sapply(go_mset$MODULES2GENES, length)
+sel <- names(N)[ N >= 5 & N <= 50 ]
+go <- go[ go$gs_id %in% sel, ]
+go_mset <- makeTmodFromDataFrame(go, feature_col = "gene_symbol",
+                                 module_col = "gs_id",
+                                 title_col = "gs_name")
+```
+
+This will result in a much more specific result list:
+
+```{r results="markdown"}
+tmodCERNOtest(gg, mset=go_mset)
+evidencePlot(gg, m="M11929", mset=go_mset, gene.labels=TRUE)
+```
+
+# 2. Beyond a simple gene set enrichment analysis
+
+Gene set enrichment analysis – esp. 2nd generation tools – can be used in
+many different contextes. Here we will inspect three such applications.
+
+## 2.1 Principal component analysis with tmod
+
+Results of the principal component analysis (PCA) can be interpreted using
+gene set enrichments. For every component, every gene gets an associated
+weight (score, loading). The higher the absolute value of that association,
+the more "important" that gene is for the given component. Let us take a
+look.
+
+However, we will select the 1000 genes with the top variance; this makes
+the PCA "cleaner" as the genes with lower variance introduce a lot of noise.
+
+```{r pca,cache=TRUE}
+count_var <- apply(norm_counts, 1, var)
+sel <- order(count_var, decreasing = TRUE)[1:1000]
+norm_counts_sel <- norm_counts[sel, ]
+
+## this little bit of R code gives as a matchin annotation data frame
+annot_sel <- annot[ match(rownames(norm_counts_sel), 
+                          annot$PrimaryID), ]
+```
+
+We now can proceed with the PCA analysis:
+
+```{r fig.width=10}
+pca <- prcomp(t(norm_counts_sel), scale=TRUE)
+df <- cbind(covar, pca$x[, 1:5])
+g1 <- ggplot(df, aes(x=PC1, y=PC2, color=group)) + geom_point()
+g2 <- ggplot(df, aes(x=PC3, y=PC4, color=group)) + geom_point()
+plot_grid(g1, g2)
+```
+
+We see that PC1 describes the difference between SC2 and the other two
+groups, while PC3 corresponds to the difference between infected groups and
+the healthy group. We now can ask what are the corresponding functional
+differences. The loadings for the genes are in the `pca$rotation` matrix:
+
+```{r results="markdown"}
+gg <- annot_sel$SYMBOL[ order(-abs(pca$rotation[,3])) ]
+tmodCERNOtest(gg)
+```
+
+And for PCA1:
+
+```{r results="markdown"}
+gg <- annot_sel$SYMBOL[ order(-abs(pca$rotation[,1])) ]
+tmodCERNOtest(gg)
+```
+
+## Correlation analysis
+
+We can attempt a functional annotation of a gene based on how it correlates
+with other genes. Fore example, in the top 100 genes for `res_SC2` there is
+the gene called `SLFN5`; the description says `schlafen family member 5`.
+The entry in [Gene
+Cards](https://www.genecards.org/cgi-bin/carddisp.pl?gene=SLFN5) is also
+hardly illuminating. However, we might want to look at genes that are
+correlated with SLFN5; they may shed light on its function.
+
+```{r}
+id <- "ENSG00000166750"
+cor_mtx <- cor(t(norm_counts), norm_counts[id, ])
+```
+
+What is the top correlating gene?
+
+```{r}
+head(cor_mtx[ order(-abs(cor_mtx[,1])), ])
+qplot(norm_counts[id, ], norm_counts[ "ENSG00000196141", ],
+      color=covar$group)
+```
 
 
-# Testing for interaction
+```{r results="markdown"}
+## make sure that the rownames are in the same order as annotation
+all(rownames(cor_mtx) == annot$PrimaryID)
+
+tmodCERNOtest(annot$SYMBOL[ order(-abs(cor_mtx[,1])) ])
+```
+
+No surprises here.
+
+## Disco analysis
+
+Let us now compare the concordant and discordant genes when comparing SC2
+to the "other" group.
+
+To calculate the disco score, we can use the `disco` package from Teresa
+Domaszewska. However, it is quite easy to do it manually:
+
+
+```{r}
+res_merged <- merge(res_other, res_SC2, 
+  by=c("PrimaryID", "ENSEMBL", "SYMBOL") , suffixes=c(".other", ".SC2"))
+
+## we will use tidyverse for readability
+res_merged <- res_merged %>% 
+  mutate(disco = log2FoldChange.other * log2FoldChange.SC2 * -1 * 
+         (log10(pvalue.other) + log10(pvalue.SC2)))
+```
+
+**Exercise. (5 min)** Plot the gene with the top and bottom disco score.
+
+**Solution.**
+
+```{r eval=FALSE,class.source="fold-hide"}
+res_merged %>% arrange(-disco) %>% head()
+res_merged %>% arrange(disco) %>% head()
+
+plot_gene("ENSG00000169248", norm_counts, covar$group)
+plot_gene("ENSG00000115008", norm_counts, covar$group)
+```
+
+We can also make a colored log2FC / log2FC plot. However, we need to
+manipulate the disco values a bit: the concordant gene sets have high
+positive outliers. Also, we need to set up a color scale.
+
+```{r}
+res_merged$disco2 <- ifelse(res_merged$disco > 50, 50, res_merged$disco)
+ggplot(res_merged, aes(x=log2FoldChange.other, y=log2FoldChange.SC2,
+                     color=disco2)) + geom_point(alpha=.5) +
+  scale_color_gradient2(low="blue", mid="grey", high="red") +
+  geom_hline(yintercept=0, color="grey") + geom_vline(xintercept=0, color="grey")
+```
+
+
+Finally, we can attempt to characterize functionally the discordant and
+concordant genes.
+
+```{r results="markdown"}
+## discordant genes
+tmodCERNOtest(res_merged$SYMBOL[ order(res_merged$disco) ])
+## concordant genes
+tmodCERNOtest(res_merged$SYMBOL[ order(-res_merged$disco) ])
+```
+
+
+
+# 3. Testing for interaction
 
 One of the valid questions is whether transcriptomic responses in Sars Cov
 2 are different in males than in females (given the different incidence of
@@ -384,4 +647,54 @@ ce_res_int_sc2 <- tmodCERNOtest(res_int_sc2$SYMBOL[
 ce_res_int_other <- tmodCERNOtest(res_int_other$SYMBOL[
                                   order(res_int_other$pvalue) ])
 ```
+
+
+# Homework
+
+**Option 1.** Prepare an Rmarkdown file which describes and performs the
+basic steps of the analysis. It should include the following steps:
+
+ * Differetial gene expression analysis of the SC2 data set with at least
+   one comparison (e.g. SC2 vs no)
+ * Gene set enrichment using tmod
+ * Visualisation using tmodPanelPlot and evidencePlots 
+
+You are free to use the code from the workshop Rmd files as your template.
+*However*, you have to describe in *your own words* what you are doing and
+why and what the results are.
+
+
+**Option 2.** Provide any other analysis in any other literate programming
+document system (LaTeX, Jupyter Notebook) which also includes differential
+gene expression analysis and gene set enrichment analysis with tool(s) of
+your choice.
+
+**Option 3.** Send me the results of one of the optional exercises (below)
+
+# Optional Exercises
+
+
+For those of you who are bored:
+
+**Comparing tmod to fgsea.** Create two additional data sets. One should
+contain only 3 individuals per group, the other should include 20
+individuals per group. Run the DE analysis for each of these data sets
+(focusing on the comparison SC2 vs "other") and for the whole data set.
+
+Next, run gene set enrichment analysis: once with tmod and once with fgsea.
+Compare the results for each of the two smaller data sets with the results for the
+full data set. Frankly, I have no idea what the result will be.
+
+**Demonstrating the danger of Venn Diagrams.** First, create a data set
+containing 40 SC2 patients and 40 healthy individuals. Create a
+corresponding covariate data frame. Then, in the covariate data frame,
+create two new groups: "A" and "B", randomly assigning the individuals to
+one of these groups. Clearly, we cannot expect any systematic differences
+between A and B. However, now we run the comparison between SC2 and healthy
+individuals independently in each of the two groups (use contrasts for
+that, creating first a dummy variable with levels `SC2_A`, `SC2_B`, `no_A`
+and `no_B`). Plot a Venn diagram showing the comparison between results in
+group A and B. Run a hypergeometric test analysis to find out whether genes
+"specific" for data set A (i.e., significant only in A, but not in B
+comparison) are enriched for a function.
 
